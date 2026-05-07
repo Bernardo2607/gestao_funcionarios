@@ -63,7 +63,7 @@ O projeto foi construído com foco em organização de código, experiência de 
 📁 gestao-funcionarios/
 ├── 📄 main.py               # Arquivo principal — lógica e fluxo do sistema
 ├── 📄 funcionarios.json     # Banco de dados local (gerado automaticamente)
-└── 📄 relatorio.txt         # Relatório exportável (gerado sob demanda)
+└── 📄 relatorio.csv         # Relatório exportável (gerado sob demanda)
 ```
 
 ### Arquitetura Interna
