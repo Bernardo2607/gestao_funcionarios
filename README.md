@@ -156,7 +156,7 @@ Este sistema foi desenvolvido com os seguintes objetivos de aprendizado e portf�
 **Bernardo**
 Desenvolvedor focado em lógica de programação, backend e segurança de dados.
 
-[![GitHub](https://img.shields.io/badge/GitHub-seu--usuario-181717?style=flat-square&logo=github)](https://github.com/seu-usuario)
+[![GitHub](https://img.shields.io/badge/GitHub-Bernardo2607-181717?style=flat-square&logo=github)](https://github.com/seu-usuario)
 
 ---
 
