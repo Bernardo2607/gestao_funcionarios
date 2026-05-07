@@ -38,7 +38,7 @@ O projeto foi construído com foco em organização de código, experiência de 
 - Dados armazenados em `funcionarios.json` com encoding UTF-8
 
 ### 📊 Relatório Automático
-- Gera um arquivo `relatorio.txt` com snapshot completo dos dados
+- Gera um arquivo `relatorio.csv` com planilha completa dos dados
 - Inclui timestamp, total de funcionários e estatísticas por gênero
 
 ### ⚙️ Sistema de Configurações
@@ -78,7 +78,7 @@ main.py
 ├── apagar_funcionario()       → DELETE individual ou em massa com confirmação
 ├── listar_funcionarios()      → READ com enumeração indexada
 ├── pesquisar_funcionarios()   → READ filtrado por substring do nome
-├── gerar_relatorio()          → Export para .txt com timestamp
+├── gerar_relatorio()          → Export para .csv
 ├── configuracoes()            → Submenu com 8 opções de personalização
 └── acoes_menu {}              → Dicionário de dispatch para o loop principal
 ```
@@ -92,7 +92,7 @@ main.py
 | `Python 3` | Linguagem principal — lógica, OOP e fluxo de dados |
 | `json` | Serialização e leitura da base de dados local |
 | `os` | Limpeza de tela e verificação de existência de arquivos |
-| `datetime` | Timestamp nos relatórios gerados |
+| `csv` | Utilizado na geração de planilhas |
 | `random` | Seleção aleatória de dicas no menu |
 | `time` | Pausas de feedback visual entre ações |
 
