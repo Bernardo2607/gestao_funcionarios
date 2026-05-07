@@ -10,7 +10,6 @@ import time
 import json
 import random
 import csv
-from datetime import datetime
 
 ARQUIVO_DADOS = "funcionarios.json"
 
