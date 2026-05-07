@@ -1,7 +1,7 @@
 """
 Sistema de Gestão de Funcionários
 Autor: [Bernardo]
-Descrição: CRUD completo com persistência de dados em JSON, 
+Descrição: CRUD completo com persistência de dados em JSON,
 desenvolvido inteiramente em ambiente mobile (Pydroid 3).
 """
 
@@ -10,63 +10,87 @@ import time
 import json
 import random
 import sys
-
-#arquivo onde serão armazenados os dados do usuário
+from datetime import datetime
 
 ARQUIVO_DADOS = "funcionarios.json"
 
-# --- Funções de memoria json ---
+# --- Classe Funcionário ---
+
+class Funcionario:
+    def __init__(self, nome, idade, cargo, genero):
+        self.nome = nome
+        self.idade = idade
+        self.cargo = cargo
+        self.genero = genero
+
+    def para_dict(self):
+        return {
+            "nome": self.nome,
+            "idade": self.idade,
+            "cargo": self.cargo,
+            "genero": self.genero
+        }
+
+    def __str__(self):
+        return f"Nome: {self.nome} | Idade: {self.idade} | Cargo: {self.cargo} | Gênero: {self.genero}"
+
+# --- Funções de memória JSON ---
 
 def salvar_dados():
     with open(ARQUIVO_DADOS, "w", encoding="utf-8") as f:
-        json.dump(funcionarios, f, indent=4, ensure_ascii=False)
+        json.dump([func.para_dict() for func in funcionarios], f, indent=4, ensure_ascii=False)
 
 def carregar_dados():
     global funcionarios
     if os.path.exists(ARQUIVO_DADOS):
         try:
             with open(ARQUIVO_DADOS, "r", encoding="utf-8") as f:
-                funcionarios = json.load(f)
+                dados = json.load(f)
+                funcionarios = [Funcionario(**d) for d in dados]
         except:
             funcionarios = []
 
-#Lista dos funcionários e dos cargos, o "núcleo" do projeto
+# --- Dados globais ---
+
 funcionarios = []
 cargos_utilizados = []
 
-#Dicas meramente ilustrativas que podem ser ativadas nas configurações
 dicas = [
-        "💡 Insight: Equipes com idades variadas equilibram energia e experiência.",
-        "💡 Aviso: Manter o Gênero atualizado ajuda a monitorizar a diversidade.",
-        "⚙️ Atalho: Use a pesquisa (Opção 4) para encontrar alguém rapidamente.",
-        "⚙️ Aviso: Se o gênero estiver errado, apague e cadastre novamente.",
-        "✨: A sua base de dados está a crescer! Continue assim.",
-        "✨: Organização é o primeiro passo para o sucesso!",
-        "⚙️ Dica: Revise os cargos periodicamente para manter os dados atualizados.",
-        "💡 Gestão: Feedbacks construtivos são ferramentas de crescimento, não de crítica.",
-        "⚙️ Sistema: Use nomes completos para evitar confusão entre homônimos.",
-        "✨: Tudo pronto para mais um dia de boa gestão!"
-    ]
+    "💡 Insight: Equipes com idades variadas equilibram energia e experiência.",
+    "💡 Aviso: Manter o Gênero atualizado ajuda a monitorizar a diversidade.",
+    "⚙️ Atalho: Use a pesquisa (Opção 4) para encontrar alguém rapidamente.",
+    "⚙️ Aviso: Se o gênero estiver errado, apague e cadastre novamente.",
+    "✨ A sua base de dados está a crescer! Continue assim.",
+    "✨ Organização é o primeiro passo para o sucesso!",
+    "⚙️ Dica: Revise os cargos periodicamente para manter os dados atualizados.",
+    "💡 Gestão: Feedbacks construtivos são ferramentas de crescimento, não de crítica.",
+    "⚙️ Sistema: Use nomes completos para evitar confusão entre homônimos.",
+    "✨ Tudo pronto para mais um dia de boa gestão!"
+]
 
-#Outras variáveis importantes
-escolha = 0
 ativar_dicas = False
 salvamento_automatico = False
 mostrar_generos = False
 mostrar_sugestoes = False
 
-#função de menu
+# --- Utilitários ---
+
 def limpar_tela():
     os.system("cls" if os.name == "nt" else "clear")
-    
-def apagar_linhas(n=1):
-    for _ in range(n):
-        sys.stdout.write('\x1b[1A')
-        sys.stdout.write('\x1b[2K')
-        
-#menu em função                
+
+def dicas_layout():
+    if ativar_dicas:
+        print(random.choice(dicas))
+        print("=+========-========++++========-=========+=")
+
+def _definir_config(global_name, valor, msg):
+    globals()[global_name] = valor
+    input(f"{msg} Aperte enter...")
+
+# --- Menu ---
+
 def menu():
-    generos = [f['genero'] for f in funcionarios]
+    generos = [f.genero for f in funcionarios]
     t_hmns = generos.count("Masculino")
     t_mlrs = generos.count("Feminino")
     t_outros = generos.count("Outro")
@@ -75,10 +99,11 @@ def menu():
     print("2. Deletar funcionário")
     print("3. Listar funcionários")
     print("4. Pesquisar funcionário")
-    if salvamento_automatico == False:
+    if not salvamento_automatico:
         print("5. Salve seu projeto!")
     print("6. Sair")
     print("7. Configurações")
+    print("8. Gerar relatório")
     if salvamento_automatico:
         print("=+========-========++++========-=========+=")
         print("💾 • Salvamento automático • 💾")
@@ -86,229 +111,188 @@ def menu():
     print(f"⚒️ • Funcionários cadastrados: {len(funcionarios)}")
     print("=+========-========++++========-=========+=")
     if mostrar_generos:
-            print("                  Gêneros")
-            print("")
-            print(f"🧑 Masculino: {t_hmns} 👩 Feminino: {t_mlrs} 🙇 Outro: {t_outros}")
-            print("=+========-========++++========-=========+=")
-
-#função do layout das dicas
-def dicas_layout(quantidade=3):
-    if ativar_dicas == True:
-        print(random.choice(dicas))
+        print("                  Gêneros")
+        print("")
+        print(f"🧑 Masculino: {t_hmns} 👩 Feminino: {t_mlrs} 🙇 Outro: {t_outros}")
         print("=+========-========++++========-=========+=")
 
-        
-#função de cadastrar usuário
+# --- CRUD ---
+
 def cadastrar_funcionario():
     nome = str(input("🏷 Qual o nome do(a) funcionário(a) que deseja cadastrar?\n")).title().strip()
     idade = int(input("🎂 Quantos anos ele(a) tem?\n"))
-    if cargos_utilizados:
-        print("👨‍🏫 sugestão de cargos já utilizados:")
+    if cargos_utilizados and mostrar_sugestoes:
+        print("👨‍🏫 Sugestão de cargos já utilizados:")
         print(f" - {cargos_utilizados}")
     cargo = str(input("🛡 Qual o cargo dele(a)?\n")).capitalize().strip()
     if cargo not in cargos_utilizados and mostrar_sugestoes:
-        cargos_utilizados.append(cargo) 
-    genero = str(input("🧑 Qual o gênero dele(a)? M/F/O\n")).title().strip()
-       
-    if genero == "M":
-       genero = "Masculino"
-    elif genero == "F":
-       genero = "Feminino"
-    elif genero == "O":
-       genero = "Outro" 
-    else:
-       print("❌️Erro! Cadastre novamente.")
-       time.sleep(1)
-       return
-    funcionario = {
-    "nome": nome,
-    "idade": idade,
-    "cargo": cargo,
-    "genero": genero
-}
-    funcionarios.append(funcionario)
-    if salvamento_automatico == True:
-       salvar_dados()
-       print("💾 Salvo automaticamente!")
-    input("✅ funcionário cadastrado! Aperte enter...")
+        cargos_utilizados.append(cargo)
+    genero = str(input("🧑 Qual o gênero dele(a)? M/F/O\n")).upper().strip()
 
-#função de apagar funcionarios utilizando sistema de comparação   
+    mapa_genero = {"M": "Masculino", "F": "Feminino", "O": "Outro"}
+    if genero not in mapa_genero:
+        print("❌️ Erro! Cadastre novamente.")
+        time.sleep(1)
+        return
+
+    func = Funcionario(nome, idade, cargo, mapa_genero[genero])
+    funcionarios.append(func)
+
+    if salvamento_automatico:
+        salvar_dados()
+        print("💾 Salvo automaticamente!")
+    input("✅ Funcionário cadastrado! Aperte enter...")
 
 def apagar_funcionario():
     if not funcionarios:
         print("❌️ Nenhum funcionário para remover!")
         time.sleep(1)
-    else:
-        listar_funcionarios()
-        posicao = int(input("⌨️ Digite o número do funcionário que deseja remover, para todos digite 0: "))
-        if posicao == 0:
-            todos = input("⚠️ Deseja excluir TODOS? S/N?").title().upper().strip()
-            if todos == 'S':
-                print("✅️ Todos foram removidos com sucesso!")
-                funcionarios.clear()
-                time.sleep(1)
-                return
-            elif todos == 'N':
-                print("❌️ Nenhum funcionário removido!")
-                time.sleep(1)
-                return
-        if posicao > len(funcionarios) or posicao < 0:
-            input("❌️ Esse funcionário não existe! aperte enter...")
-            return
-        removido = funcionarios.pop(posicao - 1)
-        print(f"✅️ Funcionário {posicao} removido com sucesso!")
+        return
+
+    listar_funcionarios()
+    posicao = int(input("⌨️ Digite o número do funcionário que deseja remover, para todos digite 0: "))
+
+    if posicao == 0:
+        confirmacao = input("⚠️ Deseja excluir TODOS? S/N? ").upper().strip()
+        if confirmacao == 'S':
+            funcionarios.clear()
+            print("✅️ Todos foram removidos com sucesso!")
+        else:
+            print("❌️ Nenhum funcionário removido!")
         time.sleep(1)
-        if salvamento_automatico:
-           salvar_dados()
-           print("💾 Salvo automaticamente!")
-           
-#função de listar seus funcionários            
-def listar_funcionarios(): #numera eles de acordo com a ordem
+        return
+
+    if posicao < 1 or posicao > len(funcionarios):
+        input("❌️ Esse funcionário não existe! Aperte enter...")
+        return
+
+    funcionarios.pop(posicao - 1)
+    print(f"✅️ Funcionário {posicao} removido com sucesso!")
+    time.sleep(1)
+
+    if salvamento_automatico:
+        salvar_dados()
+        print("💾 Salvo automaticamente!")
+
+def listar_funcionarios():
     if not funcionarios:
         print("👷‍♂️ Nenhum funcionário cadastrado!")
     else:
-        # i = número, f = a ficha do funcionário
         for i, f in enumerate(funcionarios, start=1):
-            print(f"{i}º | Nome: {f['nome']} | Idade: {f['idade']} | Cargo: {f['cargo']} | Gênero: {f['genero']}")
+            print(f"{i}º | {f}")
 
-#função de pesquisar funcionários
 def pesquisar_funcionarios():
     if not funcionarios:
-        input("❌️ Nenhum funcionário cadastrado! pressione enter...")
-    else:    
-        busca = input("💻 Digite o nome do funcionário que gostaria de pesquisar: ").title().strip()
-        encontrado = False
-        print("----------🔎Resultados da busca🔍----------")
+        input("❌️ Nenhum funcionário cadastrado! Pressione enter...")
+        return
+
+    busca = input("💻 Digite o nome do funcionário que gostaria de pesquisar: ").title().strip()
+    encontrado = False
+    print("----------🔎 Resultados da busca 🔍----------")
+    for i, f in enumerate(funcionarios, start=1):
+        if busca in f.nome:
+            print(f"{i}º | {f}")
+            print("-------------------------------------------")
+            encontrado = True
+
+    if not encontrado:
+        print("❌️ Nenhum funcionário encontrado!")
+    input("⌨️ Pressione enter para continuar...")
+
+def gerar_relatorio():
+    if not funcionarios:
+        input("❌️ Nenhum funcionário cadastrado! Aperte enter...")
+        return
+
+    agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    generos = [f.genero for f in funcionarios]
+
+    with open("relatorio.txt", "w", encoding="utf-8") as arq:
+        arq.write("========================================\n")
+        arq.write("       RELATÓRIO DE FUNCIONÁRIOS        \n")
+        arq.write("========================================\n")
+        arq.write(f"Gerado em: {agora}\n")
+        arq.write(f"Total de funcionários: {len(funcionarios)}\n")
+        arq.write(f"Masculino: {generos.count('Masculino')} | Feminino: {generos.count('Feminino')} | Outro: {generos.count('Outro')}\n")
+        arq.write("----------------------------------------\n")
         for i, f in enumerate(funcionarios, start=1):
-            if busca in f['nome']:
-                print(f"{i}º | Nome: {f['nome']} | Idade: {f['idade']} | Cargo: {f['cargo']} | Gênero: {f['genero']}")
-                print("-------------------------------------------")
-                encontrado = True
-        input("⌨️ pressione enter para continuar...")        
-        if not encontrado:
-            input("❌️ Nenhum funcionário encontrado! Pressione enter...")
+            arq.write(f"{i}º | {f}\n")
+        arq.write("========================================\n")
 
-#opcoes das configurações
-def ativar_dicas_fn():
-    global ativar_dicas
-    ativar_dicas = True
-    input("✅ Dicas ativadas! Aperte enter...")
+    input("✅ Relatório gerado em 'relatorio.txt'! Aperte enter...")
 
-def desativar_dicas_fn():
-    global ativar_dicas
-    ativar_dicas = False
-    input("❌ Dicas desativadas! Aperte enter...")
+# --- Configurações ---
 
-def ativar_salvamento_fn():
-    global salvamento_automatico
-    salvamento_automatico = True
-    input("💾 Salvamento automático ativado! Aperte enter...")
-
-def desativar_salvamento_fn():
-    global salvamento_automatico
-    salvamento_automatico = False
-    input("❌ Salvamento automático desativado! Aperte enter...")
-
-def mostrar_generos_fn():
-    global mostrar_generos
-    mostrar_generos = True
-    input("👥 Gêneros ativados!")
-
-def esconder_generos_fn():
-    global mostrar_generos
-    mostrar_generos = False
-    input("🙇 Gêneros escondidos!")
-
-def mostrar_sugestoes_fn():
-    global mostrar_sugestoes
-    mostrar_sugestoes = True
-    input("💡 Sugestões ativadas!")
-    
-def esconder_sugestoes_fn():
-    global mostrar_sugestoes
-    mostrar_sugestoes = False
-    input("👷‍♂️ Sugestões escondidas!")
-       
 acoes_config = {
-    "1": ativar_dicas_fn,
-    "2": desativar_dicas_fn,
-    "3": ativar_salvamento_fn,
-    "4": desativar_salvamento_fn,
-    "5": mostrar_generos_fn,
-    "6": esconder_generos_fn,
-    "7": mostrar_sugestoes_fn,
-    "8": esconder_sugestoes_fn
+    "1": lambda: _definir_config("ativar_dicas", True,  "✅ Dicas ativadas!"),
+    "2": lambda: _definir_config("ativar_dicas", False, "❌ Dicas desativadas!"),
+    "3": lambda: _definir_config("salvamento_automatico", True,  "💾 Salvamento automático ativado!"),
+    "4": lambda: _definir_config("salvamento_automatico", False, "❌ Salvamento automático desativado!"),
+    "5": lambda: _definir_config("mostrar_generos", True,  "👥 Gêneros ativados!"),
+    "6": lambda: _definir_config("mostrar_generos", False, "🙇 Gêneros escondidos!"),
+    "7": lambda: _definir_config("mostrar_sugestoes", True,  "💡 Sugestões ativadas!"),
+    "8": lambda: _definir_config("mostrar_sugestoes", False, "👷‍♂️ Sugestões escondidas!"),
 }
 
-#Opção das configurações do projeto
 def configuracoes():
     while True:
         limpar_tela()
         print("-====+====- ⚙️ Configurações ⚙️ -====+====-")
-        print(f"1. Ativar dicas")
+        print("1. Ativar dicas")
         print("2. Desativar dicas")
-        print(f"3. Ativar salvamento")
-        print("4. Desativar salvamento")
-        print(f"5. Mostrar gêneros")
+        print("3. Ativar salvamento automático")
+        print("4. Desativar salvamento automático")
+        print("5. Mostrar gêneros")
         print("6. Esconder gêneros")
         print("7. Mostrar sugestões")
         print("8. Esconder sugestões")
         print("0. Voltar")
         escolha_conf = input("\n👨‍🏭 O que deseja configurar? ")
-        acao = acoes_config.get(escolha_conf)
         if escolha_conf == "0":
             print("↩️ Voltando...")
             time.sleep(1)
             break
+        acao = acoes_config.get(escolha_conf)
         if acao:
             acao()
         else:
             input("❌ Opção inválida! Aperte enter...")
 
+# --- Loop principal com dicionário de ações ---
+
+acoes_menu = {
+    1: cadastrar_funcionario,
+    2: apagar_funcionario,
+    3: lambda: (listar_funcionarios(), input("Pressione enter para continuar...\n")),
+    4: pesquisar_funcionarios,
+    5: lambda: (salvar_dados(), input("✅️ Projeto salvo com sucesso! Aperte enter...")),
+    7: configuracoes,
+    8: gerar_relatorio,
+}
+
 if __name__ == "__main__":
     carregar_dados()
-    
-    # Agora o loop está devidamente identado dentro do bloco principal
+    escolha = 0
+
     while escolha != 6:
+        limpar_tela()
         menu()
         dicas_layout()
         try:
             escolha = int(input("🚀 Digite o número referente a sua escolha:\n"))
         except:
             input("❌️ Nenhuma opção selecionada! Aperte enter...")
-            escolha = 0
-            limpar_tela()
-            continue # Volta para o início do loop
-            
-        try:
-           if escolha == 1:
-              cadastrar_funcionario()
-              limpar_tela()
-           elif escolha == 2:
-              apagar_funcionario()
-              limpar_tela()
-           elif escolha == 3:
-              listar_funcionarios()
-              input("pressione enter para continuar...\n")   
-              limpar_tela()
-           elif escolha == 4:
-              pesquisar_funcionarios()
-              limpar_tela() 
-           elif escolha == 5:
-               salvar_dados()
-               input("✅️ projeto salvo com sucesso! aperte enter...")   
-               limpar_tela()
-           elif escolha == 6:
-               print("👋 Saindo...")
-               break
-           elif escolha == 7:
-               configuracoes()
-               limpar_tela()
-           elif escolha > 7 or escolha < 0:
-              print("❌️ escolha inválida!")
-              time.sleep(1)
-              limpar_tela()
-              escolha = 0
-        except Exception as e:
-           input(f"❌️ Erro! aperte enter...")
-           limpar_tela()
+            continue
+
+        if escolha == 6:
+            print("👋 Saindo...")
+            break
+
+        acao = acoes_menu.get(escolha)
+        if acao:
+            try:
+                acao()
+            except Exception as e:
+                input(f"❌️ Erro! Aperte enter...")
+        else:
+            input("❌️ Escolha inválida!")
