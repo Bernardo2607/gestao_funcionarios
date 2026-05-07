@@ -9,7 +9,7 @@ import os
 import time
 import json
 import random
-import sys
+import csv
 from datetime import datetime
 
 ARQUIVO_DADOS = "funcionarios.json"
@@ -103,7 +103,7 @@ def menu():
         print("5. Salve seu projeto!")
     print("6. Sair")
     print("7. Configurações")
-    print("8. Gerar relatório")
+    print("8. Gerar relatório CSV")
     if salvamento_automatico:
         print("=+========-========++++========-=========+=")
         print("💾 • Salvamento automático • 💾")
@@ -203,23 +203,23 @@ def gerar_relatorio():
     if not funcionarios:
         input("❌️ Nenhum funcionário cadastrado! Aperte enter...")
         return
+            
+    with open("relatorio.csv", "w", encoding="utf-8-sig", newline="") as arq:
+        campos = ["Num", "Nome", "Idade", "Cargo", "Gênero"]
+        writer = csv.DictWriter(arq, fieldnames=campos, delimiter=";")
 
-    agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    generos = [f.genero for f in funcionarios]
-
-    with open("relatorio.txt", "w", encoding="utf-8") as arq:
-        arq.write("========================================\n")
-        arq.write("       RELATÓRIO DE FUNCIONÁRIOS        \n")
-        arq.write("========================================\n")
-        arq.write(f"Gerado em: {agora}\n")
-        arq.write(f"Total de funcionários: {len(funcionarios)}\n")
-        arq.write(f"Masculino: {generos.count('Masculino')} | Feminino: {generos.count('Feminino')} | Outro: {generos.count('Outro')}\n")
-        arq.write("----------------------------------------\n")
+        writer.writeheader()
         for i, f in enumerate(funcionarios, start=1):
-            arq.write(f"{i}º | {f}\n")
-        arq.write("========================================\n")
+            writer.writerow({
+                "Num": i,
+                "Nome": f.nome,
+                "Idade": f.idade,
+                "Cargo": f.cargo,
+                "Genero": f.genero
+            })
 
-    input("✅ Relatório gerado em 'relatorio.txt'! Aperte enter...")
+    input("✅ Relatório gerado com sucesso! Aperte enter...")
+
 
 # --- Configurações ---
 
